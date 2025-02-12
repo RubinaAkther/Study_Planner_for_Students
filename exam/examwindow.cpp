@@ -12,7 +12,14 @@ examwindow::examwindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
+    QFile file("StudyPlannerExam.txt");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            ui->listwidget_examlist->addItem(line); // Add each line to the list widget
+        }
+        file.close();
     }
 
     isexamediting = false;
@@ -51,8 +58,13 @@ void examwindow::addexambutton()
         // Add the assignment to the list widg
     ui->listwidget_examlist->addItem(examText);
 
+    QFile file("StudyPlannerExam.txt");
+    if(file.open(QIODevice::Append | QIODevice::Text)){
+        QTextStream out(&file);
+        out << examText << "\n";
 
-
+        file.close();
+    }
 
         // Clear input fields
     ui->lineedit_examname->clear();
@@ -104,7 +116,28 @@ void examwindow::editexambutton()
             // Update the selected assignment
         selectedItem->setText(updatedexamText);
 
+        QFile file("StudyPlannerExam.txt");
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            QStringList lines;
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                lines << in.readLine(); // Read all lines from the file
+            }
 
+                    // Replace the old study plan with the updated one
+            int index = ui->listwidget_examlist->row(selectedItem);
+            if (index >= 0 && index < lines.size()) {
+                lines[index] = updatedexamText;
+            }
+
+                    // Write the updated lines back to the file
+            file.resize(0); // Clear the file content
+            QTextStream out(&file);
+            for (const QString &line : lines) {
+                out << line << "\n";
+            }
+            file.close();
+        }
 
             // Clear input fields and reset button state
         ui->lineedit_examname->clear();
@@ -126,6 +159,27 @@ void examwindow::removeexambutton()
         int index = ui->listwidget_examlist->row(selectedItem);
         delete selectedItem;
 
+        QFile file("StudyPlannerExam.txt");
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            QStringList lines;
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                lines << in.readLine(); // Read all lines from the file
+            }
+
+                    // Remove the deleted study plan from the file
+            if (index >= 0 && index < lines.size()) {
+                lines.removeAt(index);
+            }
+
+                    // Write the updated lines back to the file
+            file.resize(0); // Clear the file content
+            QTextStream out(&file);
+            for (const QString &line : lines) {
+                out << line << "\n";
+            }
+            file.close();
+        } 
     }
 
     updateexamlist();
