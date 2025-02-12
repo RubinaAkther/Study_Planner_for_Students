@@ -13,6 +13,15 @@ assignmentwindow::assignmentwindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    QFile file("StudyPlannerAssignment.txt");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            ui->listwidget_assignmentlist->addItem(line); // Add each line to the list widget
+        }
+        file.close();
+    }
 
     isassignmentediting = false;
 
@@ -50,6 +59,13 @@ void assignmentwindow::addassignment()
         // Add the assignment to the list widg
     ui->listwidget_assignmentlist->addItem(assignmentText);
 
+    QFile file("StudyPlannerAssignment.txt");
+    if(file.open(QIODevice::Append | QIODevice::Text)){
+        QTextStream out(&file);
+        out << assignmentText << "\n";
+
+        file.close();
+    }
 
         // Clear input fields
     ui->lineedit_assignmentname->clear();
@@ -101,7 +117,28 @@ void assignmentwindow::editassignment()
             // Update the selected assignment
         selectedItem->setText(updatedAssignmentText);
 
+        QFile file("StudyPlannerAssignment.txt");
+        if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+            QStringList lines;
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                lines << in.readLine(); // Read all lines from the file
+            }
 
+                    // Replace the old study plan with the updated one
+            int index = ui->listwidget_assignmentlist->row(selectedItem);
+            if (index >= 0 && index < lines.size()) {
+                lines[index] = updatedAssignmentText;
+            }
+
+                    // Write the updated lines back to the file
+            file.resize(0); // Clear the file content
+            QTextStream out(&file);
+            for (const QString &line : lines) {
+                out << line << "\n";
+            }
+            file.close();
+        }
 
             // Clear input fields and reset button state
         ui->lineedit_assignmentname->clear();
@@ -129,7 +166,29 @@ void assignmentwindow::removeassignment()
     // Remove the item from the list widget
     delete currentItem;
 
+    QFile file("StudyPlannerAssignment.txt"); // Replace with your file name
+    if (file.open(QIODevice::ReadWrite | QIODevice::Text)) {
+        QStringList lines;
+        QTextStream in(&file);
 
+        // Read all lines from the file
+        while (!in.atEnd()) {
+            lines << in.readLine();
+        }
+
+        // Remove the line corresponding to the deleted assignment
+        if (index >= 0 && index < lines.size()) {
+            lines.removeAt(index);
+        }
+
+        // Write the updated lines back to the file
+        file.resize(0); // Clear the file content
+        QTextStream out(&file);
+        for (const QString &line : lines) {
+            out << line << "\n";
+        }
+        file.close();
+    }
 
     // Update the assignment list (re-number the items)
     updateassignmentlist();
