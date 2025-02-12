@@ -2,7 +2,11 @@
 #define ASSIGNMENTWINDOW_H
 
 #include <QDialog>
-
+#include <QFile>
+#include <QDir>
+#include <QDebug>
+#include <QString>
+#include <QTextStream>
 
 namespace Ui {
 class assignmentwindow;
